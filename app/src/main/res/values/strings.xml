@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">MApp</string>
+    <string name="distance_label">Distance: —</string>
+    <string name="hint_tap">Tap overlay to cast ray from that point (optional).</string>
+    <string name="reset_aim">Center</string>
+    <string name="camera_permission_rationale">Camera access is required for ARCore.</string>
+</resources>
