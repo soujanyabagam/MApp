@@ -6,22 +6,23 @@ import android.opengl.GLSurfaceView
 import android.os.Build
 import android.os.Bundle
 import android.view.Display
-import android.view.MotionEvent
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
+import com.google.android.material.button.MaterialButtonToggleGroup
 import com.mapp.app.databinding.ActivityMainBinding
 import com.mapp.app.distance.DistanceCalculator
 import com.mapp.app.distance.DistanceSource
 import com.mapp.app.renderer.ArSceneGlRenderer
 import com.mapp.app.session.ArCoreSupport
 import com.mapp.app.session.ArSessionManager
+import com.mapp.app.ui.ReferenceOverlayView
 import com.google.ar.core.Session
 
 /**
- * Hosts the GL camera surface, [com.mapp.app.ui.ReferenceOverlayView] UI crosshair, and wires session + distance logic.
+ * Hosts the GL camera surface, [com.mapp.app.ui.ReferenceOverlayView] reference dot/line, and wires session + distance logic.
  * Depth API is never enabled; plane hit-test + intrinsics fallback keep A52-class devices supported.
  */
 class MainActivity : AppCompatActivity() {
@@ -54,10 +55,11 @@ class MainActivity : AppCompatActivity() {
             assumedRealWidthMeters = 1.0f,
             assumedVisibleFractionOfImageWidth = 0.25f,
         )
-        glRenderer = ArSceneGlRenderer(distanceCalculator).apply {
+        glRenderer = ArSceneGlRenderer(assets, distanceCalculator).apply {
             distanceToScaleK = 0.35f
             minObjectScale = 0.08f
             maxObjectScale = 1.6f
+            objectBaseScale = 0.4f
             listener = ArSceneGlRenderer.ArRenderListener { meters, source, trackingOk ->
                 runOnUiThread {
                     updateDistanceUi(meters, source, trackingOk)
@@ -79,30 +81,43 @@ class MainActivity : AppCompatActivity() {
             renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
         }
 
-        binding.referenceOverlay.setOnTouchListener { _, event ->
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                glRenderer.hitXView = event.x
-                glRenderer.hitYView = event.y
-                return@setOnTouchListener true
+        binding.referenceOverlay.referenceListener =
+            ReferenceOverlayView.ReferenceListener { x, y ->
+                glRenderer.hitXView = x
+                glRenderer.hitYView = y
             }
-            false
-        }
+
+        binding.referenceModeGroup.addOnButtonCheckedListener(
+            MaterialButtonToggleGroup.OnButtonCheckedListener { _, checkedId, isChecked ->
+                if (!isChecked) return@OnButtonCheckedListener
+                val mode = when (checkedId) {
+                    R.id.modeDotButton -> ReferenceOverlayView.SelectionMode.DOT
+                    R.id.modeLineButton -> ReferenceOverlayView.SelectionMode.LINE
+                    else -> ReferenceOverlayView.SelectionMode.NONE
+                }
+                binding.referenceOverlay.selectionMode = mode
+                val interact = mode != ReferenceOverlayView.SelectionMode.NONE
+                binding.referenceOverlay.isClickable = interact
+                binding.referenceOverlay.isFocusable = interact
+            },
+        )
 
         binding.resetAimButton.setOnClickListener {
+            binding.referenceOverlay.resetToCenter()
             binding.glSurfaceView.doOnLayout { glv ->
-                glRenderer.hitXView = glv.width * 0.5f
-                glRenderer.hitYView = glv.height * 0.5f
+                glRenderer.hitXView = binding.referenceOverlay.dotX
+                glRenderer.hitYView = binding.referenceOverlay.dotY
             }
             if (binding.glSurfaceView.width > 0) {
-                glRenderer.hitXView = binding.glSurfaceView.width * 0.5f
-                glRenderer.hitYView = binding.glSurfaceView.height * 0.5f
+                glRenderer.hitXView = binding.referenceOverlay.dotX
+                glRenderer.hitYView = binding.referenceOverlay.dotY
             }
         }
 
-        binding.glSurfaceView.doOnLayout { glv ->
+        binding.glSurfaceView.doOnLayout {
             if (glRenderer.hitXView == 0f && glRenderer.hitYView == 0f) {
-                glRenderer.hitXView = glv.width * 0.5f
-                glRenderer.hitYView = glv.height * 0.5f
+                glRenderer.hitXView = binding.referenceOverlay.dotX
+                glRenderer.hitYView = binding.referenceOverlay.dotY
             }
         }
 

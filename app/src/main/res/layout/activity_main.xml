@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -14,8 +15,8 @@
         android:id="@+id/referenceOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clickable="true"
-        android:focusable="true" />
+        android:clickable="false"
+        android:focusable="false" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -59,20 +60,62 @@
         android:orientation="vertical"
         android:padding="12dp">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/reference_select_label"
+            android:textColor="#ECEFF1"
+            android:textSize="12sp" />
+
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/referenceModeGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            app:checkedButton="@+id/modeNoneButton"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/modeNoneButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mode_none"
+                app:shapeAppearance="?attr/shapeAppearanceCornerSmall" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/modeDotButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mode_dot"
+                app:shapeAppearance="?attr/shapeAppearanceCornerSmall" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/modeLineButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mode_line"
+                app:shapeAppearance="?attr/shapeAppearanceCornerSmall" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/resetAimButton"
             style="@style/Widget.Material3.Button.TonalButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="@string/reset_aim" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="@string/hint_tap"
+            android:text="@string/hint_reference"
             android:textColor="#ECEFF1"
             android:textSize="11sp"
-            android:maxWidth="200dp" />
+            android:maxWidth="220dp" />
     </LinearLayout>
 </FrameLayout>

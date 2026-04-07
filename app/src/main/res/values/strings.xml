@@ -2,6 +2,11 @@
     <string name="app_name">MApp</string>
     <string name="distance_label">Distance: —</string>
     <string name="hint_tap">Tap overlay to cast ray from that point (optional).</string>
+    <string name="reference_select_label">Reference</string>
+    <string name="mode_none">View</string>
+    <string name="mode_dot">Move dot</string>
+    <string name="mode_line">Move line</string>
+    <string name="hint_reference">Choose Move dot or Move line, then drag on screen. The dot sets the AR ray; the line is a visual guide.</string>
     <string name="reset_aim">Center</string>
     <string name="camera_permission_rationale">Camera access is required for ARCore.</string>
 </resources>

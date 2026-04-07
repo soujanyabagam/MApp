@@ -130,8 +130,17 @@ internal class CubeOutlineRenderer {
             val modelScaled = FloatArray(16)
             Matrix.multiplyMM(modelScaled, 0, modelFromPose, 0, scale, 0)
 
+            buildMvp(proj, view, modelScaled, outMvp)
+        }
+
+        fun buildMvp(
+            proj: FloatArray,
+            view: FloatArray,
+            modelMatrix: FloatArray,
+            outMvp: FloatArray,
+        ) {
             val mv = FloatArray(16)
-            Matrix.multiplyMM(mv, 0, view, 0, modelScaled, 0)
+            Matrix.multiplyMM(mv, 0, view, 0, modelMatrix, 0)
             Matrix.multiplyMM(outMvp, 0, proj, 0, mv, 0)
         }
     }
