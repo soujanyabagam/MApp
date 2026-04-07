@@ -1,6 +1,6 @@
 package com.mapp.app.session
 
-import android.content.Context
+import android.app.Activity
 import com.google.ar.core.ArCoreApk
 import com.google.ar.core.exceptions.UnavailableApkTooOldException
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
@@ -8,7 +8,8 @@ import com.google.ar.core.exceptions.UnavailableException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 
 /**
- * Runtime ARCore availability checks. Depth API is never required; this only validates install/ARCore support.
+ * Runtime ARCore availability checks.
+ * Depth API is never required; this only validates install/ARCore support.
  */
 object ArCoreSupport {
 
@@ -21,23 +22,30 @@ object ArCoreSupport {
     }
 
     /**
-     * @return true if the app may proceed to request a [com.google.ar.core.Session].
+     * @return state indicating whether ARCore is ready
      */
-    fun ensureInstalled(context: Context): InstallState {
+    fun ensureInstalled(activity: Activity): InstallState {
         return try {
-            when (ArCoreApk.getInstance().requestInstall(context, true)) {
-                ArCoreApk.InstallStatus.INSTALLED -> InstallState.SUPPORTED_INSTALLED
-                ArCoreApk.InstallStatus.INSTALL_REQUESTED -> InstallState.UNKNOWN_CHECKING
+            when (ArCoreApk.getInstance().requestInstall(activity, true)) {
+                ArCoreApk.InstallStatus.INSTALLED ->
+                    InstallState.SUPPORTED_INSTALLED
+
+                ArCoreApk.InstallStatus.INSTALL_REQUESTED ->
+                    InstallState.UNKNOWN_CHECKING
             }
         } catch (e: UnavailableException) {
             when (e) {
                 is UnavailableUserDeclinedInstallationException ->
                     InstallState.SUPPORTED_NOT_INSTALLED
+
                 is UnavailableDeviceNotCompatibleException ->
                     InstallState.UNSUPPORTED_DEVICE_NOT_CAPABLE
+
                 is UnavailableApkTooOldException ->
                     InstallState.SUPPORTED_APK_TOO_OLD
-                else -> InstallState.UNSUPPORTED_DEVICE_NOT_CAPABLE
+
+                else ->
+                    InstallState.UNSUPPORTED_DEVICE_NOT_CAPABLE
             }
         }
     }

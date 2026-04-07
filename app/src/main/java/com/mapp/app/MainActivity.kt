@@ -21,10 +21,6 @@ import com.mapp.app.session.ArSessionManager
 import com.mapp.app.ui.ReferenceOverlayView
 import com.google.ar.core.Session
 
-/**
- * Hosts the GL camera surface, [com.mapp.app.ui.ReferenceOverlayView] reference dot/line, and wires session + distance logic.
- * Depth API is never enabled; plane hit-test + intrinsics fallback keep A52-class devices supported.
- */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -55,16 +51,19 @@ class MainActivity : AppCompatActivity() {
             assumedRealWidthMeters = 1.0f,
             assumedVisibleFractionOfImageWidth = 0.25f,
         )
+
         glRenderer = ArSceneGlRenderer(assets, distanceCalculator).apply {
             distanceToScaleK = 0.35f
             minObjectScale = 0.08f
             maxObjectScale = 1.6f
             objectBaseScale = 0.4f
+
             listener = ArSceneGlRenderer.ArRenderListener { meters, source, trackingOk ->
                 runOnUiThread {
                     updateDistanceUi(meters, source, trackingOk)
                 }
             }
+
             setViewportSessionHook {
                 sessionManager.setDisplayGeometry(
                     binding.glSurfaceView.width,
@@ -81,10 +80,13 @@ class MainActivity : AppCompatActivity() {
             renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
         }
 
+        // ✅ FIXED LISTENER (THIS WAS YOUR ERROR)
         binding.referenceOverlay.referenceListener =
-            ReferenceOverlayView.ReferenceListener { x, y ->
-                glRenderer.hitXView = x
-                glRenderer.hitYView = y
+            object : ReferenceOverlayView.ReferenceListener {
+                override fun onReferenceDotMoved(x: Float, y: Float) {
+                    glRenderer.hitXView = x
+                    glRenderer.hitYView = y
+                }
             }
 
         binding.referenceModeGroup.addOnButtonCheckedListener(
@@ -104,29 +106,17 @@ class MainActivity : AppCompatActivity() {
 
         binding.resetAimButton.setOnClickListener {
             binding.referenceOverlay.resetToCenter()
-            binding.glSurfaceView.doOnLayout { glv ->
-                glRenderer.hitXView = binding.referenceOverlay.dotX
-                glRenderer.hitYView = binding.referenceOverlay.dotY
-            }
-            if (binding.glSurfaceView.width > 0) {
+            binding.glSurfaceView.doOnLayout {
                 glRenderer.hitXView = binding.referenceOverlay.dotX
                 glRenderer.hitYView = binding.referenceOverlay.dotY
             }
         }
 
-        // Offset control buttons
-        binding.offsetLeftButton.setOnClickListener {
-            glRenderer.objectOffsetX -= 0.1f
-        }
-        binding.offsetRightButton.setOnClickListener {
-            glRenderer.objectOffsetX += 0.1f
-        }
-        binding.offsetUpButton.setOnClickListener {
-            glRenderer.objectOffsetY += 0.1f
-        }
-        binding.offsetDownButton.setOnClickListener {
-            glRenderer.objectOffsetY -= 0.1f
-        }
+        // Offset controls
+        binding.offsetLeftButton.setOnClickListener { glRenderer.objectOffsetX -= 0.1f }
+        binding.offsetRightButton.setOnClickListener { glRenderer.objectOffsetX += 0.1f }
+        binding.offsetUpButton.setOnClickListener { glRenderer.objectOffsetY += 0.1f }
+        binding.offsetDownButton.setOnClickListener { glRenderer.objectOffsetY -= 0.1f }
 
         binding.glSurfaceView.doOnLayout {
             if (glRenderer.hitXView == 0f && glRenderer.hitYView == 0f) {
@@ -142,8 +132,7 @@ class MainActivity : AppCompatActivity() {
                 binding.statusText.text = "Complete ARCore installation if prompted, then return."
             }
             ArCoreSupport.InstallState.SUPPORTED_NOT_INSTALLED,
-            ArCoreSupport.InstallState.SUPPORTED_APK_TOO_OLD,
-            -> {
+            ArCoreSupport.InstallState.SUPPORTED_APK_TOO_OLD -> {
                 binding.statusText.visibility = android.view.View.VISIBLE
                 binding.statusText.text = "Install or update Google Play Services for AR."
             }
@@ -167,7 +156,7 @@ class MainActivity : AppCompatActivity() {
     private fun requestCameraIfNeeded() {
         when {
             ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
-                PackageManager.PERMISSION_GRANTED -> onCameraPermissionGranted()
+                    PackageManager.PERMISSION_GRANTED -> onCameraPermissionGranted()
             else -> cameraPermission.launch(Manifest.permission.CAMERA)
         }
     }
@@ -206,7 +195,7 @@ class MainActivity : AppCompatActivity() {
             DistanceSource.PLANE_HIT_CENTER -> "Source: plane hit (center ray)"
             DistanceSource.PLANE_HIT_TAP -> "Source: plane hit (tap ray)"
             DistanceSource.INTRINSICS_ASSUMED_SIZE ->
-                "Source: intrinsics + assumed size (no plane; move to textured surfaces)"
+                "Source: intrinsics + assumed size"
         }
     }
 
@@ -219,9 +208,6 @@ class MainActivity : AppCompatActivity() {
         sessionManager.resume()
         sessionManager.session?.let { s ->
             glRenderer.session = s
-            if (binding.glSurfaceView.width > 0) {
-                sessionManager.setDisplayGeometry(binding.glSurfaceView.width, binding.glSurfaceView.height)
-            }
         }
     }
 
