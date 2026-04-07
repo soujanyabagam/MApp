@@ -30,8 +30,8 @@ class ArSessionManager(private val context: Context) {
         return try {
             val s = Session(context)
             val config = s.config.apply {
-                // Primary plane hit-testing does not need depth; keep off for A52-class hardware.
-                depthMode = Config.DepthMode.DISABLED
+                // Enable depth for better hit testing on supported devices
+                depthMode = Config.DepthMode.AUTOMATIC
                 planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
                 updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
                 focusMode = Config.FocusMode.AUTO

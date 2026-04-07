@@ -52,6 +52,10 @@ class ArSceneGlRenderer(
     var minObjectScale: Float = 0.06f
     var maxObjectScale: Float = 2f
 
+    /** Manual offset in world space (meters) from the hit pose. */
+    var objectOffsetX: Float = 0f
+    var objectOffsetY: Float = 0f
+
     var listener: ArRenderListener? = null
 
     private val backgroundRenderer = BackgroundRenderer()
@@ -149,10 +153,16 @@ class ArSceneGlRenderer(
         val distanceScale = scaleFromDistance(dist)
         val uniformScale = (objectBaseScale * distanceScale).let { clampScale(it) }
 
+        // Logging
+        android.util.Log.d("ArSceneGlRenderer", "Distance: $dist m, Source: ${estimate.source}, Scale: $uniformScale")
+
         camera.getProjectionMatrix(projectionMatrix, 0, 0.1f, 100f)
         camera.getViewMatrix(viewMatrix, 0)
 
         estimate.objectPose.toMatrix(poseMatrix, 0)
+
+        // Apply manual offset in world space
+        Matrix.translateM(poseMatrix, 0, objectOffsetX, objectOffsetY, 0f)
 
         buildPhoneLockedModelMatrix(poseMatrix, viewMatrix, uniformScale, modelMatrix)
 
@@ -172,12 +182,12 @@ class ArSceneGlRenderer(
     }
 
     /**
-     * `1 / (1 + k * d)` so scale is full at d = 0 and decreases as distance grows.
+     * Scale inversely proportional to distance: base / distance, clamped.
      */
     private fun scaleFromDistance(distanceMeters: Float): Float {
-        val d = if (distanceMeters.isNaN() || distanceMeters < 0f) 0f else distanceMeters
-        val denom = 1f + distanceToScaleK * d
-        return if (denom > 1e-6f) 1f / denom else maxObjectScale
+        val d = max(distanceMeters, 0.1f) // Avoid division by zero or very small
+        val rawScale = objectBaseScale / d
+        return min(maxObjectScale, max(minObjectScale, rawScale))
     }
 
     private fun clampScale(raw: Float): Float {

@@ -114,6 +114,20 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Offset control buttons
+        binding.offsetLeftButton.setOnClickListener {
+            glRenderer.objectOffsetX -= 0.1f
+        }
+        binding.offsetRightButton.setOnClickListener {
+            glRenderer.objectOffsetX += 0.1f
+        }
+        binding.offsetUpButton.setOnClickListener {
+            glRenderer.objectOffsetY += 0.1f
+        }
+        binding.offsetDownButton.setOnClickListener {
+            glRenderer.objectOffsetY -= 0.1f
+        }
+
         binding.glSurfaceView.doOnLayout {
             if (glRenderer.hitXView == 0f && glRenderer.hitYView == 0f) {
                 glRenderer.hitXView = binding.referenceOverlay.dotX

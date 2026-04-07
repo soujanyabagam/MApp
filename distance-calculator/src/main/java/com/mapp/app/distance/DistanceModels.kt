@@ -7,14 +7,14 @@ import com.google.ar.core.Pose
  * never depends on Depth API.
  */
 enum class DistanceSource {
-    /** Ray from screen center hit a tracked plane. */
+    /** Ray from screen center hit a trackable (plane, depth point, etc.). */
     PLANE_HIT_CENTER,
 
-    /** User tapped to cast a ray; that ray hit a tracked plane. */
+    /** User tapped to cast a ray; that ray hit a trackable. */
     PLANE_HIT_TAP,
 
     /**
-     * No reliable plane hit: distance estimated from texture intrinsics and an assumed real-world
+     * No reliable hit: distance estimated from texture intrinsics and an assumed real-world
      * width for an object spanning a fraction of the image (weak heuristic; tunable).
      */
     INTRINSICS_ASSUMED_SIZE

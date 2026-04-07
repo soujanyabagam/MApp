@@ -48,7 +48,7 @@ class DistanceCalculator(
         val xAr = xView
         val yAr = viewHeightPx - yView
 
-        val hit = firstPlaneHit(frame.hitTest(xAr, yAr))
+        val hit = firstHit(frame.hitTest(xAr, yAr))
         if (hit != null) {
             val dist = distanceMeters(camera.pose, hit.hitPose)
             val source = if (isCenterHit(xView, yView, viewWidthPx, viewHeightPx)) {
@@ -70,14 +70,8 @@ class DistanceCalculator(
         return kotlin.math.abs(x - cx) <= tol && kotlin.math.abs(y - cy) <= tol
     }
 
-    private fun firstPlaneHit(hits: List<HitResult>): HitResult? {
-        for (h in hits) {
-            val t = h.trackable
-            if (t is Plane && t.trackingState == TrackingState.TRACKING) {
-                return h
-            }
-        }
-        return null
+    private fun firstHit(hits: List<HitResult>): HitResult? {
+        return hits.firstOrNull()
     }
 
     private fun distanceMeters(cameraPose: Pose, worldPose: Pose): Float {
